@@ -80,10 +80,12 @@
         <button id="close-cart" class="mt-4 text-blue-500" onclick="toggleCart()">Close</button>
     </div>
 
-    <footer class="p-6 bg-gray-800 mt-8">
-        <div class="text-white text-center">
-            <p>&copy; 2024 SquadX. All rights reserved.</p>
-            <p><a href="contact.html" class="text-blue-400">Contact Us</a></p>
+    <!-- Footer Section -->
+    <footer class="bg-gray-800 text-white py-4 mt-10">
+        <div class="text-center">
+            <p class="text-sm">&copy; 2024 SquadX. All rights reserved.</p>
+            <p class="text-sm">Crafted by <a href="https://www.theaathish.site"
+                    class="text-red-500 hover:underline">@Aathish</a></p>
         </div>
     </footer>
 
@@ -142,11 +144,13 @@
             if (qty > 0) {
                 const existingItemIndex = cart.findIndex(item => item.name === name);
                 if (existingItemIndex > -1) {
+                    // Increase quantity if the item already exists in the cart
                     cart[existingItemIndex].quantity += qty;
                 } else {
+                    // Add new item to the cart
                     cart.push({ name, price, quantity: qty });
                 }
-                renderCart();
+                renderCart(); // Update the cart display
             }
         }
 
@@ -172,7 +176,7 @@
 
             // Update cart button text
             const cartToggleButton = document.getElementById('cart-toggle');
-            cartToggleButton.innerText = `Cart (${cart.length})`;
+            cartToggleButton.innerText = `Cart (${cart.reduce((acc, item) => acc + item.quantity, 0)})`; // Update cart count
         }
 
         function toggleCart() {
@@ -196,6 +200,7 @@
         document.getElementById('cart-toggle').addEventListener('click', toggleCart);
         fetchProducts();
     </script>
+
 </body>
 
 </html>

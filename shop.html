@@ -67,7 +67,7 @@
     <header class="p-6 flex justify-between items-center">
         <h1 class="text-white text-2xl font-bold">
             <a href="index.html" class="hover:underline">Squad - X</a>
-        </h1>        
+        </h1>
         <button id="cart-toggle" class="floating-cart">Cart (0)</button>
     </header>
 
@@ -126,6 +126,7 @@
 
     <script>
         let products = [];
+        let filteredProducts = [];
         let cart = [];
         let currentPage = 1;
         const itemsPerPage = 25;
@@ -241,6 +242,16 @@
             }
             updateCart(); // Update cart display
         }
+
+        document.getElementById('search-bar').addEventListener('input', (event) => {
+            const searchTerm = event.target.value.toLowerCase();
+            filteredProducts = products.filter(product =>
+                product.name.toLowerCase().includes(searchTerm) ||
+                product.description.toLowerCase().includes(searchTerm)
+            );
+            currentPage = 1; // Reset to first page on search
+            renderProducts(filteredProducts, currentPage);
+        });
 
         function toggleCart() {
             document.getElementById('cart-menu').classList.toggle('active');

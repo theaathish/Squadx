@@ -87,8 +87,10 @@
     <div id="cart-menu" class="cart-menu p-4">
         <h2 class="text-lg font-bold">Cart</h2>
         <div id="cart-list" class="mt-4"></div>
-        <button id="checkout-btn" class="bg-blue-500 text-white py-2 px-4 rounded mt-4 hidden" onclick="checkout()">Finalize Purchase</button>
-        <button id="clear-cart" class="mt-4 bg-red-500 text-white py-2 px-4 rounded" onclick="clearCart()">Clear Cart</button>
+        <button id="checkout-btn" class="bg-blue-500 text-white py-2 px-4 rounded mt-4 hidden"
+            onclick="checkout()">Finalize Purchase</button>
+        <button id="clear-cart" class="mt-4 bg-red-500 text-white py-2 px-4 rounded" onclick="clearCart()">Clear
+            Cart</button>
         <button id="close-cart" class="mt-4 text-blue-500" onclick="toggleCart()">Close</button>
     </div>
 
@@ -96,7 +98,8 @@
     <footer class="bg-gray-800 text-white py-4 mt-10">
         <div class="text-center">
             <p class="text-sm">&copy; 2024 SquadX. All rights reserved.</p>
-            <p class="text-sm">Crafted by <a href="https://www.theaathish.site" class="text-red-500 hover:underline">@Aathish</a></p>
+            <p class="text-sm">Crafted by <a href="https://www.theaathish.site"
+                    class="text-red-500 hover:underline">@Aathish</a></p>
         </div>
     </footer>
 
@@ -126,23 +129,99 @@
                 const productCard = document.createElement('div');
                 productCard.className = 'bg-white rounded-lg shadow-md p-4';
                 productCard.innerHTML = `
-                    <img src="${product.image}" alt="${product.name}" class="w-full h-32 object-cover mb-2">
-                    <h3 class="text-lg font-bold">${product.name}</h3>
-                    <p class="text-gray-700">${product.description}</p>
-                    <p class="font-bold text-lg">${product.discountPrice} ₹ <span class="line-through text-gray-500">${product.originalPrice} ₹</span></p>
-                    <p class="text-green-500">Stock: ${product.stockStatus}</p>
-                    <input type="number" id="quantity-${product.name}" min="0" value="0" class="border p-1 rounded w-24 mb-2">
-                    <button class="bg-blue-500 text-white py-2 px-4 rounded" onclick="addToCart('${product.name}', ${product.originalPrice}, document.getElementById('quantity-${product.name}').value)">Add to Cart</button>
-                `;
+            <img src="${product.image}" alt="${product.name}" class="w-full h-32 object-cover mb-2">
+            <h3 class="text-lg font-bold">${product.name}</h3>
+            <p class="text-gray-700">${product.description}</p>
+            <p class="font-bold text-lg">${product.discountPrice} ₹ <span class="line-through text-gray-500">${product.originalPrice} ₹</span></p>
+            <p class="text-green-500">Stock: ${product.stockStatus}</p>
+            <input type="number" id="quantity-${product.name}" min="0" value="0" class="border p-1 rounded w-24 mb-2">
+            <button class="bg-blue-500 text-white py-2 px-4 rounded" onclick="addToCart('${product.name}', ${product.originalPrice}, document.getElementById('quantity-${product.name}').value)">Add to Cart</button>
+        `;
                 productList.appendChild(productCard);
             });
         }
 
-        // Other cart and checkout functions remain unchanged
+        function addToCart(productName, productPrice, quantity) {
+            quantity = parseInt(quantity);
+            if (quantity > 0) {
+                const productIndex = cart.findIndex(item => item.name === productName);
+                if (productIndex > -1) {
+                    cart[productIndex].quantity += quantity;
+                } else {
+                    cart.push({ name: productName, price: productPrice, quantity });
+                }
+                updateCartDisplay();
+            }
+        }
+
+        function updateCartDisplay() {
+            const cartList = document.getElementById('cart-list');
+            const cartButton = document.getElementById('cart-toggle');
+            cartList.innerHTML = '';  // Clear the cart list
+            let totalItems = 0;
+            let totalPrice = 0;
+
+            cart.forEach(item => {
+                totalItems += item.quantity;
+                totalPrice += item.price * item.quantity;
+                const cartItem = document.createElement('div');
+                cartItem.className = 'cart-item mb-4';
+                cartItem.innerHTML = `
+            <p>${item.name} - ${item.quantity} x ₹${item.price} = ₹${item.quantity * item.price}</p>
+            <button class="text-red-500" onclick="removeFromCart('${item.name}')">Remove</button>
+        `;
+                cartList.appendChild(cartItem);
+            });
+
+            cartButton.textContent = `Cart (${totalItems})`;
+
+            if (totalItems > 0) {
+                const totalDisplay = document.createElement('p');
+                totalDisplay.className = 'font-bold';
+                totalDisplay.textContent = `Total: ₹${totalPrice}`;
+                cartList.appendChild(totalDisplay);
+                document.getElementById('checkout-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('checkout-btn').classList.add('hidden');
+            }
+        }
+
+        function removeFromCart(productName) {
+            cart = cart.filter(item => item.name !== productName);
+            updateCartDisplay();
+        }
+
+        function clearCart() {
+            cart = [];
+            updateCartDisplay();
+        }
+
+        function toggleCart() {
+            const cartMenu = document.getElementById('cart-menu');
+            cartMenu.classList.toggle('active');
+        }
+
+        function checkout() {
+            const whatsappMessage = cart.map(item => `${item.quantity} x ${item.name} @ ₹${item.price}`).join('%0A');
+            const totalPrice = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+            window.location.href = `https://wa.me/917358345611?text=Order%20Details:%0A${whatsappMessage}%0ATotal%20Price:%20₹${totalPrice}`;
+            clearCart();
+        }
+
+        // Add search functionality
+        document.getElementById('search-bar').addEventListener('input', (event) => {
+            const query = event.target.value.toLowerCase();
+            const filteredProducts = products.filter(product =>
+                product.name.toLowerCase().includes(query) ||
+                product.description.toLowerCase().includes(query)
+            );
+            renderProducts(filteredProducts);
+        });
 
         document.addEventListener('DOMContentLoaded', fetchProducts);
         document.getElementById('cart-toggle').addEventListener('click', toggleCart);
         document.getElementById('close-cart').addEventListener('click', toggleCart);
+
     </script>
 
 </body>

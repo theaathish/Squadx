@@ -11,34 +11,115 @@
 
         body {
             font-family: 'TT Commons', sans-serif;
-            background: linear-gradient(to right, black, red);
+            background: #f5f5f5;
         }
 
-        .cart-menu {
+        /* General Styles */
+        .cart-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 400px;
+            background-color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            padding: 20px;
+            border-radius: 10px;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            opacity: 0;
+            max-height: 80vh;
+            overflow-y: auto; /* Make it scrollable */
+        }
+
+        .cart-popup.active {
+            display: block;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+
+        .overlay {
+            display: none;
             position: fixed;
             top: 0;
-            right: -100%;
-            width: 300px;
+            left: 0;
+            width: 100%;
             height: 100%;
-            background: white;
-            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
-            transition: right 0.3s ease;
-            z-index: 100;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 99;
+            transition: opacity 0.4s ease;
         }
 
-        .cart-menu.active {
-            right: 0;
+        .overlay.active {
+            display: block;
+            opacity: 1;
         }
 
         .floating-cart {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: blue;
+            background: #007bff;
             color: white;
             padding: 10px 20px;
-            border-radius: 5px;
+            border-radius: 50px;
             z-index: 200;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .floating-cart:hover {
+            background: #0056b3;
+            box-shadow: 0 7px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .floating-cart span {
+            margin-left: 8px;
+        }
+
+        .pagination button,
+        .pagination span {
+            padding: 0.5rem 1rem;
+            margin: 0 0.25rem;
+            border: 1px solid #ccc;
+            background-color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .pagination button:hover {
+            background-color: #f0f0f0;
+            transform: scale(1.05);
+        }
+
+        .pagination .active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        /* Product Grid and Card Styles */
+        #product-list div {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-radius: 10px;
+        }
+
+        #product-list div:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button {
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
         }
 
         .spinner {
@@ -59,40 +140,67 @@
                 transform: rotate(360deg);
             }
         }
+
+        /* Mobile Responsive */
+        @media (max-width: 640px) {
+            .grid-cols-3 {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .floating-cart {
+                font-size: 12px;
+                padding: 8px 12px;
+            }
+
+            .floating-cart span {
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 
 <body>
 
-    <header class="p-6 flex justify-between items-center">
+    <header class="p-6 flex justify-between items-center bg-gray-800">
         <h1 class="text-white text-2xl font-bold">
-            <a href="index.html" class="hover:underline">Squad - X</a>
+            <a href="index.html" class="hover:underline">SquadX</a>
         </h1>
-        <button id="cart-toggle" class="floating-cart">Cart (0)</button>
+        <button id="cart-toggle" class="floating-cart">
+            <img src="https://img.icons8.com/ios-filled/50/ffffff/shopping-cart.png" alt="cart" width="24">
+            <span>Cart (0)</span>
+        </button>
     </header>
 
     <main class="container mx-auto p-4">
-        <h2 class="text-3xl text-white text-center mb-6">Shop All Products</h2>
+        <h2 class="text-3xl text-gray-800 text-center mb-6">Shop All Products</h2>
 
         <!-- Search Bar -->
         <div class="flex justify-center mb-4">
-            <input type="text" id="search-bar" placeholder="Search products..." class="p-2 rounded w-full sm:w-1/2">
+            <input type="text" id="search-bar" placeholder="Search products..." class="p-2 rounded w-full sm:w-1/2 border">
+        </div>
+
+        <!-- Filter Options -->
+        <div class="flex justify-center mb-4">
+            <select id="filter" class="p-2 rounded w-full sm:w-1/4 border">
+                <option value="default">Default</option>
+                <option value="low-high">Price: Low to High</option>
+                <option value="high-low">Price: High to Low</option>
+            </select>
         </div>
 
         <div id="spinner" class="text-center mb-4 hidden">
             <div class="spinner"></div>
         </div>
 
+        <!-- Product Grid -->
         <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
 
         <!-- Pagination Controls -->
-        <div class="flex justify-center mt-6">
-            <button id="prev-page" class="bg-gray-500 text-white py-2 px-4 rounded mx-2" disabled>Previous</button>
-            <button id="next-page" class="bg-blue-500 text-white py-2 px-4 rounded mx-2">Next</button>
-        </div>
+        <div class="pagination" id="pagination-controls"></div>
     </main>
 
-    <div id="cart-menu" class="cart-menu p-4">
+    <!-- Cart Modal -->
+    <div id="cart-popup" class="cart-popup">
         <h2 class="text-lg font-bold">Cart</h2>
         <div class="overflow-x-auto">
             <table class="table-auto w-full">
@@ -107,20 +215,21 @@
                 <tbody id="cart-list" class="mt-4"></tbody>
             </table>
         </div>
+        <p id="total-amount" class="font-bold mt-4">Total: ₹0</p>
         <button id="checkout-btn" class="bg-blue-500 text-white py-2 px-4 rounded mt-4 hidden"
             onclick="checkout()">Finalize Purchase</button>
-        <button id="clear-cart" class="mt-4 bg-red-500 text-white py-2 px-4 rounded" onclick="clearCart()">Clear
-            Cart</button>
+        <button id="clear-cart" class="mt-4 bg-red-500 text-white py-2 px-4 rounded" onclick="clearCart()">Clear Cart</button>
         <button id="close-cart" class="mt-4 text-blue-500" onclick="toggleCart()">Close</button>
     </div>
 
+    <!-- Overlay for the popup -->
+    <div id="overlay" class="overlay"></div>
 
     <!-- Footer Section -->
     <footer class="bg-gray-800 text-white py-4 mt-10">
         <div class="text-center">
             <p class="text-sm">&copy; 2024 SquadX. All rights reserved.</p>
-            <p class="text-sm">Crafted by <a href="https://www.theaathish.site"
-                    class="text-red-500 hover:underline">@Aathish</a></p>
+            <p class="text-sm">Crafted by <a href="https://www.theaathish.site" class="text-red-500 hover:underline">@Aathish</a></p>
         </div>
     </footer>
 
@@ -129,7 +238,8 @@
         let filteredProducts = [];
         let cart = [];
         let currentPage = 1;
-        const itemsPerPage = 25;
+        const itemsPerPage = 6;
+        let totalPages = 1;
 
         async function fetchProducts() {
             const spinner = document.getElementById('spinner');
@@ -137,7 +247,9 @@
             try {
                 const response = await fetch('https://script.googleusercontent.com/macros/echo?user_content_key=Yfuk-ysZRbKFw79FdfN0WqffhmDFkoQDrI5r3gzWzPO2dsA75mmIHIhQLuC8c82JDumLYE50Hp9JpCCHqXgrVaSb7mzyqkeJm5_BxDlH2jW0nuo2oDemN9CCS2h10ox_1xSncGQajx_ryfhECjZEnPVNHR0rSAP571M5-bUi6wTy8qGa1k_OqnAqCApMApBQYxmqslfD1kO1HWoSMupvuwQiOsPwya6RKSWDdHady7KBBMYlCm1K4tz9Jw9Md8uu&lib=MJNYiXG_z8xhEuxfoMo1BLQLCqzEsJnJr');
                 products = await response.json();
+                totalPages = Math.ceil(products.length / itemsPerPage);
                 renderProducts(products, currentPage);
+                renderPagination(totalPages, currentPage);
             } catch (error) {
                 console.error("Failed to fetch products:", error);
             } finally {
@@ -155,125 +267,153 @@
 
             paginatedProducts.forEach(product => {
                 const productCard = document.createElement('div');
-                productCard.className = 'bg-white rounded-lg shadow-md p-4';
+                productCard.className = 'bg-white rounded-lg shadow-md p-4 transition-transform duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1';
                 productCard.innerHTML = `
-                    <img src="${product.image}" alt="${product.name}" class="w-full h-32 object-contain mb-2">
+                    <img src="${product.image}" alt="${product.name}" class="w-full h-32 object-contain mb-2 rounded-md">
                     <h3 class="text-lg font-bold">${product.name}</h3>
                     <p class="text-gray-700">${product.description}</p>
-                    <p class="font-bold text-lg">₹${product.discountPrice} <span class="line-through text-gray-500">₹${product.originalPrice}</span></p>
+                    <p class="font-bold text-lg">₹${product.discountPrice} <span class="line-through text-gray-500">₹${roundOffPrice(product.originalPrice)}</span></p>
                     <p class="text-green-500">Stock: ${product.stockStatus}</p>
-                    <button class="bg-blue-500 text-white py-2 px-4 rounded" onclick="addToCart('${product.name}', ${product.discountPrice})">Add to Cart</button>
+                    <button class="bg-blue-500 text-white py-2 px-4 rounded mt-2 transition duration-200 ease-in-out transform hover:bg-blue-600 hover:scale-105" onclick="addToCart('${product.name}', ${product.discountPrice})">Add to Cart</button>
                 `;
                 productList.appendChild(productCard);
             });
-
-            updatePaginationControls();
         }
 
-        function updatePaginationControls() {
-            document.getElementById('prev-page').disabled = currentPage === 1;
-            document.getElementById('next-page').disabled = currentPage * itemsPerPage >= products.length;
+        function roundOffPrice(price) {
+            return parseFloat(price).toFixed(2);
         }
 
-        document.getElementById('prev-page').addEventListener('click', () => {
-            if (currentPage > 1) {
-                currentPage--;
-                renderProducts(products, currentPage);
+        function renderPagination(totalPages, currentPage) {
+            const paginationControls = document.getElementById('pagination-controls');
+            paginationControls.innerHTML = ''; // Clear previous pagination
+
+            const maxPagesToShow = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+            let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+            if (startPage > 1) {
+                paginationControls.innerHTML += `<button onclick="goToPage(1)">1</button>`;
+                if (startPage > 2) {
+                    paginationControls.innerHTML += `<span class="dots">...</span>`;
+                }
             }
+
+            for (let i = startPage; i <= endPage; i++) {
+                paginationControls.innerHTML += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    paginationControls.innerHTML += `<span class="dots">...</span>`;
+                }
+                paginationControls.innerHTML += `<button onclick="goToPage(${totalPages})">${totalPages}</button>`;
+            }
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            renderProducts(filteredProducts.length > 0 ? filteredProducts : products, currentPage);
+            renderPagination(totalPages, currentPage);
+        }
+
+        document.getElementById('search-bar').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            filteredProducts = products.filter(product => product.name.toLowerCase().includes(searchTerm));
+            totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+            currentPage = 1;
+            renderProducts(filteredProducts, currentPage);
+            renderPagination(totalPages, currentPage);
         });
 
-        document.getElementById('next-page').addEventListener('click', () => {
-            if (currentPage * itemsPerPage < products.length) {
-                currentPage++;
-                renderProducts(products, currentPage);
-            }
-        });
-
-        function addToCart(name, price) {
-            const existingItem = cart.find(item => item.name === name);
-            if (existingItem) {
-                existingItem.quantity += 1; // Increment the quantity by 1
+        document.getElementById('filter').addEventListener('change', (e) => {
+            const filterValue = e.target.value;
+            if (filterValue === 'low-high') {
+                filteredProducts = [...products].sort((a, b) => a.discountPrice - b.discountPrice);
+            } else if (filterValue === 'high-low') {
+                filteredProducts = [...products].sort((a, b) => b.discountPrice - a.discountPrice);
             } else {
-                cart.push({ name, price, quantity: 1 }); // Add new item with quantity 1
+                filteredProducts = products;
             }
-            updateCart(); // Update the cart display
+            totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+            currentPage = 1;
+            renderProducts(filteredProducts, currentPage);
+            renderPagination(totalPages, currentPage);
+        });
+
+        function addToCart(productName, productPrice) {
+            const existingProduct = cart.find(item => item.name === productName);
+            if (existingProduct) {
+                existingProduct.quantity++;
+            } else {
+                cart.push({ name: productName, price: productPrice, quantity: 1 });
+            }
+            updateCart();
         }
 
         function updateCart() {
             const cartList = document.getElementById('cart-list');
             cartList.innerHTML = ''; // Clear previous cart items
-
+            let cartTotal = 0;
             cart.forEach((item, index) => {
-                const cartItem = document.createElement('tr');
-                cartItem.innerHTML = `
-                    <td class="border px-4 py-2">${item.name}</td>
-                    <td class="border px-4 py-2">₹${item.price}</td>
-                    <td class="border px-4 py-2 flex items-center justify-center">
-                        <button class="bg-gray-300 px-2" onclick="decreaseQuantity(${index})">-</button>
-                        <span class="mx-2">${item.quantity}</span>
-                        <button class="bg-gray-300 px-2" onclick="increaseQuantity(${index})">+</button>
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-4 py-2">${item.name}</td>
+                    <td class="px-4 py-2">₹${item.price}</td>
+                    <td class="px-4 py-2">
+                        <button class="bg-red-500 text-white px-2 py-1" onclick="decreaseQuantity(${index})">-</button>
+                        ${item.quantity}
+                        <button class="bg-blue-500 text-white px-2 py-1" onclick="increaseQuantity(${index})">+</button>
                     </td>
-                    <td class="border px-4 py-2">₹${item.price * item.quantity}</td>
+                    <td class="px-4 py-2">₹${(item.price * item.quantity).toFixed(2)}</td>
                 `;
-                cartList.appendChild(cartItem);
+                cartList.appendChild(row);
+                cartTotal += item.price * item.quantity;
             });
 
-            document.getElementById('cart-toggle').textContent = `Cart (${cart.length})`;
+            document.getElementById('total-amount').textContent = `Total: ₹${cartTotal.toFixed(2)}`;
+            document.getElementById('checkout-btn').classList.toggle('hidden', cart.length === 0);
 
-            if (cart.length > 0) {
-                document.getElementById('checkout-btn').classList.remove('hidden');
-            } else {
-                document.getElementById('checkout-btn').classList.add('hidden');
-            }
+            // Update floating cart button with the number of items in the cart
+            document.getElementById('cart-toggle').querySelector('span').textContent = `Cart (${cart.length})`;
         }
 
-        // Function to increase quantity
         function increaseQuantity(index) {
-            cart[index].quantity += 1;
-            updateCart(); // Update cart display
+            cart[index].quantity++;
+            updateCart();
         }
 
-        // Function to decrease quantity
         function decreaseQuantity(index) {
             if (cart[index].quantity > 1) {
-                cart[index].quantity -= 1;
+                cart[index].quantity--;
             } else {
-                cart.splice(index, 1); // Remove item from cart if quantity is 0
+                cart.splice(index, 1); // Remove the item if quantity is 0
             }
-            updateCart(); // Update cart display
+            updateCart();
         }
-
-        document.getElementById('search-bar').addEventListener('input', (event) => {
-            const searchTerm = event.target.value.toLowerCase();
-            filteredProducts = products.filter(product =>
-                product.name.toLowerCase().includes(searchTerm) ||
-                product.description.toLowerCase().includes(searchTerm)
-            );
-            currentPage = 1; // Reset to first page on search
-            renderProducts(filteredProducts, currentPage);
-        });
 
         function toggleCart() {
-            document.getElementById('cart-menu').classList.toggle('active');
+            const cartPopup = document.getElementById('cart-popup');
+            const overlay = document.getElementById('overlay');
+            cartPopup.classList.toggle('active');
+            overlay.classList.toggle('active');
         }
 
-        function checkout() {
-            const cartData = cart.map(item => `${item.name} - ₹${item.price} x ${item.quantity}`).join('\n');
-            const whatsappLink = `https://api.whatsapp.com/send?phone=+917358345611&text=${encodeURIComponent('Order Details:\n' + cartData)}`;
-            window.open(whatsappLink, '_blank');
-        }
+        document.getElementById('cart-toggle').addEventListener('click', toggleCart);
 
         function clearCart() {
             cart = [];
             updateCart();
         }
 
-        document.getElementById('cart-toggle').addEventListener('click', toggleCart);
+        function checkout() {
+            const cartItems = cart.map(item => `${item.name} - ${item.quantity} qty`).join('\n');
+            const message = encodeURIComponent(`I'd like to purchase the following items:\n${cartItems}`);
+            window.location.href = `https://wa.me/917358345611?text=${message}`;
+        }
 
-        // Fetch products on page load
         fetchProducts();
     </script>
-
 
 </body>
 
